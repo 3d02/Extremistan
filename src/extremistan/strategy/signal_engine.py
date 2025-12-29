@@ -9,7 +9,7 @@ SignalType = Literal["GO", "NO-GO", "WATCH", "CAUTION"]
 class SignalResult:
     signal: SignalType
     alpha_2y: float
-    alpha_6m: float
+    alpha_26w: float
     description: str
 
 class SignalEngine:
@@ -29,7 +29,7 @@ class SignalEngine:
 
     def evaluate(self,
                  alpha_2y: float,
-                 alpha_6m: float,
+                 alpha_26w: float,
                  fragility_density: float = 0.0,
                  healing_density: float = 0.0,
                  slope: float = np.nan,
@@ -40,7 +40,7 @@ class SignalEngine:
 
         Args:
             alpha_2y: The 2-Year Climate Hill Alpha.
-            alpha_6m: The 6-Month Weather Hill Alpha.
+            alpha_26w: The 26-Week Weather Hill Alpha.
             fragility_density: The percentage of days in the last 20 days where Weather < Climate (0.0 to 1.0).
             healing_density: The percentage of days in the last 20 days where Weather > Climate (0.0 to 1.0).
             slope: Term Structure Slope (10Y - Short Rate). Negative implies inversion.
@@ -48,7 +48,7 @@ class SignalEngine:
             vol_stress: Z-Score of current return vs regime volatility.
         """
         if pd.isna(alpha_2y):
-             return SignalResult("NO-GO", alpha_2y, alpha_6m, "Insufficient Data (Climate)")
+             return SignalResult("NO-GO", alpha_2y, alpha_26w, "Insufficient Data (Climate)")
 
         signal: SignalType = "NO-GO"
         description = "Neutral/Safe"
@@ -93,4 +93,4 @@ class SignalEngine:
                 signal = "CAUTION"
                 description = "Warning Zone"
 
-        return SignalResult(signal, alpha_2y, alpha_6m, description)
+        return SignalResult(signal, alpha_2y, alpha_26w, description)

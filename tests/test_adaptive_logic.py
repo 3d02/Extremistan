@@ -40,7 +40,7 @@ def test_signal_engine_cross_asset():
     # Case 1: Extremistan + Fragile + No Stress -> GO
     res = engine.evaluate(
         alpha_2y=2.5,
-        alpha_6m=2.0,
+        alpha_26w=2.0,
         fragility_density=0.8,
         healing_density=0.1,
         slope=1.0,
@@ -52,7 +52,7 @@ def test_signal_engine_cross_asset():
     # Case 2: Extremistan + Fragile + Stress (Inverted Slope) -> GO (High Conviction)
     res = engine.evaluate(
         alpha_2y=2.5,
-        alpha_6m=2.0,
+        alpha_26w=2.0,
         fragility_density=0.8,
         healing_density=0.1,
         slope=-0.5,
@@ -64,7 +64,7 @@ def test_signal_engine_cross_asset():
     # Case 3: Extremistan + Fragile + Stress (High MOVE) -> GO (High Conviction)
     res = engine.evaluate(
         alpha_2y=2.5,
-        alpha_6m=2.0,
+        alpha_26w=2.0,
         fragility_density=0.8,
         healing_density=0.1,
         slope=1.0,
@@ -79,7 +79,7 @@ def test_signal_engine_healing():
     # Case: Extremistan + Fragile Density High BUT Healing Density ALSO High -> WATCH
     res = engine.evaluate(
         alpha_2y=2.5,
-        alpha_6m=3.0, # Weather > Climate locally
+        alpha_26w=3.0, # Weather > Climate locally
         fragility_density=0.6, # Still high from history
         healing_density=0.6, # But healing is dominating recently?
         slope=1.0,
