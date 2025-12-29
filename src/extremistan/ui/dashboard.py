@@ -41,7 +41,7 @@ class MatplotlibDashboard:
 
         # TRACK 2: Signal (Alpha Regimes)
         ax2.plot(df.index, df['Alpha_2Y'], color='#008080', linewidth=1.5, label='Climate (2Y Alpha)')
-        ax2.plot(df.index, df['Alpha_6M'], color='#ff7f0e', linewidth=1.2, label='Weather (6M Alpha)')
+        ax2.scatter(df.index, df['Alpha_6M'], color='#ff7f0e', s=10, label='Weather (6M Alpha Points)')
 
         # Critical Thresholds
         ax2.axhline(3.0, color='red', linestyle='--', linewidth=1, label='Extremistan (<3.0)')

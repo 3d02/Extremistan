@@ -52,7 +52,7 @@ sequenceDiagram
     Analytics-->>Main: Updated DataFrame (Alphas, Drawdown)
 
     Note over Main: 4. Signal Evaluation
-    Main->>Strategy: evaluate(Alpha_2Y, Alpha_6M)
+    Main->>Strategy: evaluate(Alpha_2Y, Alpha_6M, Fragility_Density)
     Strategy-->>Main: SignalResult (GO/NO-GO)
 
     Note over Main: 5. Reporting & Visualization

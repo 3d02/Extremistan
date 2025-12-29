@@ -80,19 +80,27 @@ def main():
 
     print("[*] Calculating Tail Alphas (This may take a moment)...")
     # Use raw=False to pass Series to function
-    df['Alpha_2Y'] = df['Log_Return'].rolling(window=CLIMATE_WINDOW).apply(get_hill_alpha, raw=False)
-    df['Alpha_6M'] = df['Log_Return'].rolling(window=WEATHER_WINDOW).apply(get_hill_alpha, raw=False)
+    df['Alpha_2Y'] = df['Log_Return'].rolling(window=CLIMATE_WINDOW).apply(get_hill_alpha, raw=False, kwargs={'min_k': 10})
+    df['Alpha_6M'] = df['Log_Return'].rolling(window=WEATHER_WINDOW).apply(get_hill_alpha, raw=False, kwargs={'min_k': 4})
 
     df['Drawdown'] = calculate_drawdown(df['SPX'])
 
     # 4. Strategy Signal
+    # Calculate Fragility Density (20-day rolling density of Weather < Climate)
+    df['Is_Fragile'] = (df['Alpha_6M'] < df['Alpha_2Y']).astype(int)
+    # Important: Mask Is_Fragile as NaN if either alpha is NaN, so we don't count missing data as 'healing' (0)
+    df.loc[df['Alpha_6M'].isna() | df['Alpha_2Y'].isna(), 'Is_Fragile'] = np.nan
+
+    df['Fragility_Density'] = df['Is_Fragile'].rolling(window=20, min_periods=1).mean()
+
     curr_alpha_2y = df['Alpha_2Y'].iloc[-1]
     curr_alpha_6m = df['Alpha_6M'].iloc[-1]
+    curr_fragility_density = df['Fragility_Density'].iloc[-1]
     curr_vix = df['VIX'].iloc[-1] if not pd.isna(df['VIX'].iloc[-1]) else 0.0
     curr_dd = df['Drawdown'].iloc[-1]
 
     engine = SignalEngine()
-    signal_result = engine.evaluate(curr_alpha_2y, curr_alpha_6m)
+    signal_result = engine.evaluate(curr_alpha_2y, curr_alpha_6m, curr_fragility_density)
 
     # 5. Reporting
     print("\n" + "="*60)
