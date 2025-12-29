@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+- Updated `ARCHITECTURE.md` to reflect the modular package structure and document remaining coupling.
+
 ### Added
 - Added CLI entry point `extremistan` in `pyproject.toml`.
 - Added "Installation and Setup" section to `README.md` with detailed instructions for venv and pip install.
