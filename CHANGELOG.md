@@ -5,6 +5,9 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- Created `AGENTS.md` to define project governance and rules for AI agents.
+- Enforced strict format for Architecture Decision Records (ADRs).
+- Documented semantic consistency rules for file updates.
 - Modular architecture implementation (`src/extremistan`).
 - `Analytics` layer with pure math functions.
 - `Data` layer with local Caching (Parquet) and Adapters (Yahoo, CSV).
@@ -13,6 +16,8 @@ All notable changes to this project will be documented in this file.
 - `pytest` test suite.
 
 ### Changed
+- Standardized ADR filenames (renamed `001` to `0002`) and format (added `Alternatives Considered`).
+- Updated `CONTRIBUTING.md` to include governance sections.
 - Refactored monolithic `extremistan.py` into a structured Python package.
 - Moved `sp500_history_1927_2025.csv` to `data_storage/`.
 

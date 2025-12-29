@@ -29,7 +29,25 @@ AI agents interacting with this codebase must adhere to strict verification prot
 *   **Documentation Alignment:** AI agents must check `SPEC.md` and `ARCHITECTURE.md` to ensure their code changes do not violate the core architectural or mathematical principles.
 *   **Tagging:** Please tag your PRs with `[AI-Generated]` if the code was primarily written by an LLM.
 
-## 4. Testing
+## 4. Governance
+
+### Architecture Decision Records (ADRs)
+We use ADRs to capture significant architectural decisions. If your change involves a major design decision (e.g., adding a new database, changing the math library, restructuring modules), you must create a new ADR.
+
+*   **Location:** `docs/adr/`
+*   **Naming:** `XXXX-title-slug.md` (e.g., `0003-add-database.md`).
+*   **Format:** Follow the strict template defined in `AGENTS.md`.
+
+### Changelog
+We follow the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) standard.
+
+*   **File:** `CHANGELOG.md`
+*   **Rules:**
+    *   Add your changes to the `[Unreleased]` section at the top of the file.
+    *   Categorize them correctly (`Added`, `Changed`, `Fixed`, etc.).
+    *   Never rewrite past release notes.
+
+## 5. Testing
 
 Currently, the project is a single script. To test:
 
