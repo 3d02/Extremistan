@@ -2,8 +2,8 @@ import pandas as pd
 import yfinance as yf
 import numpy as np
 from typing import List, Optional
-from src.extremistan.data.interfaces import DataSource
-from src.extremistan.data.store import ParquetStore
+from extremistan.data.interfaces import DataSource
+from extremistan.data.store import ParquetStore
 
 class YahooFinanceAdapter(DataSource):
     """

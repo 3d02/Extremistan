@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- Added CLI entry point `extremistan` in `pyproject.toml`.
+- Added "Installation and Setup" section to `README.md` with detailed instructions for venv and pip install.
 - Created `AGENTS.md` to define project governance and rules for AI agents.
 - Enforced strict format for Architecture Decision Records (ADRs).
 - Documented semantic consistency rules for file updates.
