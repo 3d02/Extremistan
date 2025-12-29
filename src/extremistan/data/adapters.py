@@ -1,9 +1,46 @@
 import pandas as pd
 import yfinance as yf
+import pandas_datareader.data as web
 import numpy as np
 from typing import List, Optional
 from extremistan.data.interfaces import DataSource
 from extremistan.data.store import ParquetStore
+
+class FredAdapter(DataSource):
+    """
+    Fetches economic data from FRED (Federal Reserve Economic Data).
+    Includes caching via ParquetStore.
+    """
+    def __init__(self, use_cache: bool = True):
+        self.store = ParquetStore() if use_cache else None
+
+    def get_data(self, tickers: List[str], start_date: str, end_date: Optional[str] = None) -> pd.DataFrame:
+        # 1. Try Cache
+        if self.store:
+            cached_data = self.store.load(tickers, start_date, end_date)
+            if cached_data is not None:
+                return cached_data
+
+        # 2. Fetch Live
+        try:
+            # pandas_datareader syntax for FRED: web.DataReader(tickers, 'fred', start, end)
+            data = web.DataReader(tickers, 'fred', start_date, end_date)
+
+            if data.empty:
+                return pd.DataFrame()
+
+            # Ensure index is DatetimeIndex
+            data.index = pd.to_datetime(data.index)
+
+            # 3. Save to Cache
+            if self.store:
+                self.store.save(data, tickers, start_date, end_date)
+
+            return data
+
+        except Exception as e:
+            print(f"Error processing FRED data: {e}")
+            return pd.DataFrame()
 
 class YahooFinanceAdapter(DataSource):
     """

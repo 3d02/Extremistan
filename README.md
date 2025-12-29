@@ -102,7 +102,8 @@ We don't want to hold protection forever.
 
 ### D. Cross-Asset Confirmation
 Stock markets can be irrational. Bond markets are usually smarter. We check two other sensors:
-1.  **Slope Yield Curve (`^TNX - ^IRX`):** When short-term rates are higher than long-term rates (Inversion), a recession is likely.
+1.  **Slope Yield Curve (`T10Y3M`):** We use the Federal Reserve series "10-Year Treasury Constant Maturity Minus 3-Month Treasury Constant Maturity". When this is negative (Inversion), a recession is likely.
+    *   *Source:* Federal Reserve Economic Data (FRED).
 2.  **MOVE Index (`^MOVE`):** The "VIX for Bonds".
     *   **Level Stress:** > 120.
     *   **Acute Stress (ROC):** > +10% increase in 5 days.

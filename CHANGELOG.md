@@ -5,6 +5,9 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **FRED Data Integration:** Added `FredAdapter` and `pandas-datareader` dependency to fetch official economic data from the Federal Reserve.
+- **Slope Accuracy:** Switched Yield Curve Slope calculation to use `T10Y3M` (10Y-3M Constant Maturity) from FRED, replacing the Yahoo `^TNX - ^IRX` approximation.
+- **Offline Data Script:** Added `scripts/fetch_offline_data.py` to generate the required CSV dataset including both Yahoo and FRED series.
 - **Adaptive Fragility Refinements:**
     - **Momentum Healing:** `Alpha_6M_ROC` (>5% in 10 days) triggers early exit/downgrade to counter "Ghost Effect".
     - **Acute Stress Trigger:** `MOVE_ROC` (>10% in 5 days) triggers "High Conviction" GO signal even if levels are below absolute thresholds.
