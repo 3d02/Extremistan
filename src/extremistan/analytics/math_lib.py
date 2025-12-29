@@ -100,3 +100,15 @@ def get_z_score(value: float, mean: float, std: float) -> float:
     if std == 0:
         return 0.0 # Avoid division by zero, though conceptually undefined or infinite
     return (value - mean) / std
+
+def get_rate_of_change(series: pd.Series, window: int) -> pd.Series:
+    """
+    Calculates the Rate of Change (ROC) over a specified window.
+    ROC = (Value_t - Value_{t-window}) / |Value_{t-window}|
+    Using simple difference divided by absolute value of denominator to handle negative numbers gracefully.
+    But for simple percentage change: (V_t / V_{t-n}) - 1.
+
+    For Alpha (always positive), simple percentage change is fine.
+    For MOVE (always positive), simple percentage change is fine.
+    """
+    return series.pct_change(periods=window, fill_method=None)

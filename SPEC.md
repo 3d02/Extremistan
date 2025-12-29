@@ -10,15 +10,18 @@
 ### 1.2 Mathematical Framework
 *   **Logarithmic Returns:** We assume continuously compounded log returns ($r_t = \ln(P_t / P_{t-1})$) are the correct unit of analysis because they are time-additive and normalize the price series for statistical operations.
 *   **Adaptive Hill Estimator:** We use an adaptive Hill Estimator for the Tail Index ($\alpha$), where the tail cut-off $k$ is determined dynamically via the Danielsson–de Vries heuristic ($k \approx \sqrt{n}$) rather than a fixed percentage. This stabilizes variance across different volatility regimes.
-*   **Multi-Frequency Analysis:** "Climate" (structural risk) is assessed on daily data over 2 years, while "Weather" (tactical risk) is assessed on weekly data over 6 months to reduce autocorrelation and noise.
+*   **Multi-Frequency Analysis:** "Climate" (structural risk) is assessed on daily data over 2 years, while "Weather" (tactical risk) is assessed on daily data over 6 months to ensure statistical power for tail estimation.
 
 ### 1.3 Strategic Logic
 *   **Ghost Effect:** A low 2-year Alpha (high risk) might be a lag artifact from a crash 18 months ago. Comparing it to the 6-month Alpha allows us to distinguish between "healing" markets and "deteriorating" markets.
+*   **Momentum Healing:** To further counter the Ghost Effect, we monitor the Rate of Change (ROC) of the Weather Alpha. A rapid improvement (> 5% / 10 days) signals market stabilization even if absolute levels remain suppressed.
 *   **Fragility Persistence (Density Rule):** Unlike simple crossover signals which can be noisy, we require "Fragility Persistence." A GO signal triggers only when the Weather Alpha (< 6M) has been structurally below the Climate Alpha (> 2Y) for a significant density (> 50%) of the recent 20-day window.
 *   **Symmetric Healing:** A "Healing Density" (> 50% of Weather > Climate) is used to explicitly downgrade conviction or exit trades, preventing "holding on" to protection after the danger has passed.
 *   **Cross-Asset Confirmation:** Equity fragility is validated against macro stress indicators:
     *   **Term Structure Slope:** Inversion (10Y < 3M/2Y) signals recession risk.
-    *   **MOVE Index:** High bond market volatility confirms systemic stress.
+    *   **MOVE Index:**
+        *   Level > 120: Systemic stress.
+        *   Acute ROC > 10% (5-day): Rapid deterioration.
 *   **Regime Divergence:** The most profitable trades occur when implied volatility (VIX) is low (market is complacent) but structural fragility (Hill Alpha) is high.
 
 ---
