@@ -1,4 +1,4 @@
-# ADR 001: Modular Architecture Refactor
+# ADR 0002: Modular Architecture Refactor
 
 ## Status
 Accepted
@@ -27,3 +27,6 @@ We will refactor the application into a modular Python package `src/extremistan`
 ### Negative
 - **Complexity:** Increased number of files and boilerplate code compared to a single script.
 - **Setup:** Requires a proper Python package structure and installation (handled via `pyproject.toml`).
+
+## Alternatives Considered
+*   **Maintaining the Monolith:** We considered keeping the single `extremistan.py` script for simplicity. However, this was rejected as it makes testing difficult, hinders collaboration, and makes future web integration much harder due to tight coupling between logic and plotting.
