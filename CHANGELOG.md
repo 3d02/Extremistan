@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 - Added CLI entry point `extremistan` in `pyproject.toml`.
 - Added "Installation and Setup" section to `README.md` with detailed instructions for venv and pip install.
 - Created `AGENTS.md` to define project governance and rules for AI agents.
+- Added `docs/logic_review.md` with a quantitative critique and improvement plan for the fragility logic.
 - Enforced strict format for Architecture Decision Records (ADRs).
 - Documented semantic consistency rules for file updates.
 - Modular architecture implementation (`src/extremistan`).
@@ -25,6 +26,9 @@ All notable changes to this project will be documented in this file.
 - Updated `CONTRIBUTING.md` to include governance sections.
 - Refactored monolithic `extremistan.py` into a structured Python package.
 - Moved `sp500_history_1927_2025.csv` to `data_storage/`.
+
+### Fixed
+- Enabled local test runs by adding package initializers and a pytest path shim so `extremistan` imports resolve without installation.
 
 ## [0.1.0] - 2023-10-27
 
