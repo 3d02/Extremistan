@@ -34,7 +34,9 @@ class SignalEngine:
                  healing_density: float = 0.0,
                  slope: float = np.nan,
                  move_index: float = np.nan,
-                 vol_stress: float = np.nan) -> SignalResult:
+                 vol_stress: float = np.nan,
+                 alpha_6m_roc: float = 0.0,
+                 move_roc: float = 0.0) -> SignalResult:
         """
         Evaluates the strategic signal.
 
@@ -46,6 +48,8 @@ class SignalEngine:
             slope: Term Structure Slope (10Y - Short Rate). Negative implies inversion.
             move_index: Bond Volatility Index. High levels (>120) indicate stress.
             vol_stress: Z-Score of current return vs regime volatility.
+            alpha_6m_roc: 10-day Rate of Change of Weather Alpha. > 0.05 implies healing momentum.
+            move_roc: 5-day Rate of Change of MOVE Index. > 0.10 implies acute stress.
         """
         if pd.isna(alpha_2y):
              return SignalResult("NO-GO", alpha_2y, alpha_6m, "Insufficient Data (Climate)")
@@ -58,6 +62,8 @@ class SignalEngine:
         healing_density = healing_density if not pd.isna(healing_density) else 0.0
         slope = slope if not pd.isna(slope) else 999.0 # Default to positive slope (safe)
         move_index = move_index if not pd.isna(move_index) else 0.0
+        alpha_6m_roc = alpha_6m_roc if not pd.isna(alpha_6m_roc) else 0.0
+        move_roc = move_roc if not pd.isna(move_roc) else 0.0
 
         is_extremistan = alpha_2y < self.extremistan_threshold
         is_caution = alpha_2y < self.caution_threshold
@@ -65,7 +71,11 @@ class SignalEngine:
         # Cross-Asset Stress Flags
         is_slope_inverted = slope < 0
         is_move_stress = move_index > 120 # Arbitrary high stress level, can be tuned
-        is_cross_asset_stress = is_slope_inverted or is_move_stress
+        is_acute_move_stress = move_roc > 0.10 # Acute stress > 10% in 5 days
+        is_cross_asset_stress = is_slope_inverted or is_move_stress or is_acute_move_stress
+
+        # Healing Flags
+        is_momentum_healing = alpha_6m_roc > 0.05 # > 5% improvement in 10 days
 
         if is_extremistan:
             if fragility_density > 0.5:
@@ -76,11 +86,14 @@ class SignalEngine:
                     signal = "GO"
                     description = f"Fragile Regime (Density {fragility_density:.0%})"
 
-                # Healing Logic: If healing density is high, we might downgrade or exit
-                # "Add a healing density... to exit or downgrade a GO"
+                # Healing Logic: If healing density is high OR strong momentum healing
                 if healing_density > 0.5:
                     signal = "WATCH"
                     description = f"Healing Detected (Density {healing_density:.0%})"
+                elif is_momentum_healing:
+                    signal = "WATCH"
+                    description = f"Momentum Healing (Alpha ROC {alpha_6m_roc:.2%})"
+
             else:
                 signal = "WATCH"
                 description = f"Structural Fragility - Wait for Density > 50% (Curr: {fragility_density:.0%})"

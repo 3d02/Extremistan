@@ -70,13 +70,14 @@ We don't just look at one number. We compare the long-term structure ("Climate")
 
 ### 2. Weather Alpha ($\alpha_{6M}$)
 *   **Timeframe:** 6 Months (126 trading days).
-*   **Data Frequency:** **Weekly**. (We resample daily data to weekly to remove noise).
+*   **Data Frequency:** Daily. (Calculated daily to increase statistical power, $n \approx 126$).
 *   **Meaning:** This is the tactical risk. Is the market deteriorating *right now*?
 
 ### The Logic of Fragility
 We watch for the **"Ghost Effect"**. Sometimes, the 2-Year Alpha is low just because there was a crash 18 months ago. That's old news.
 *   **Healing:** If the 6-Month Alpha is *rising* above the 2-Year Alpha, the market is recovering.
 *   **Fragility:** If the 6-Month Alpha drops *below* the 2-Year Alpha, new risks are forming.
+*   **Momentum Healing:** If `Alpha_6M` rises rapidly (>5% in 10 days), we flag "Momentum Healing" to counter the Ghost Effect even if the absolute level is still low.
 
 ---
 
@@ -88,21 +89,25 @@ The software uses a strict set of rules to generate signals (GO, WATCH, CAUTION)
 To ensure our backtests are honest, we **shift all data by 1 day**.
 *   To decide whether to buy at the Open on **Tuesday**, we are only allowed to use data up until the Close on **Monday**.
 *   Code: `df['Alpha_shifted'] = df['Alpha'].shift(1)`
+*   *Refinement:* Live execution uses strict T-1 Close data.
 
 ### B. Fragility Density
 A single day of bad data isn't enough. We look at the last 20 days.
 *   **Rule:** If "Weather" < "Climate" for more than 50% of the last 20 days, we have **Fragility Persistence**.
 
-### C. Symmetric Healing
+### C. Symmetric & Momentum Healing
 We don't want to hold protection forever.
-*   **Rule:** If "Weather" > "Climate" for more than 50% of the last 20 days, we identify **Healing** and downgrade the signal.
+*   **Density Healing:** If "Weather" > "Climate" for more than 50% of the last 20 days.
+*   **Momentum Healing:** If `Alpha_6M` Rate-of-Change (10-day) > +5%. This allows an early exit if the market stabilizes rapidly.
 
 ### D. Cross-Asset Confirmation
 Stock markets can be irrational. Bond markets are usually smarter. We check two other sensors:
 1.  **Slope Yield Curve (`^TNX - ^IRX`):** When short-term rates are higher than long-term rates (Inversion), a recession is likely.
-2.  **MOVE Index (`^MOVE`):** The "VIX for Bonds". If this spikes > 120, the financial plumbing is breaking.
+2.  **MOVE Index (`^MOVE`):** The "VIX for Bonds".
+    *   **Level Stress:** > 120.
+    *   **Acute Stress (ROC):** > +10% increase in 5 days.
 
-**High Conviction Signal = Fragility Density (>50%) + (Inverted Yield Curve OR High Bond Volatility).**
+**High Conviction Signal = Fragility Density (>50%) + (Inverted Yield Curve OR High Bond Volatility OR Acute Bond Stress).**
 
 ---
 

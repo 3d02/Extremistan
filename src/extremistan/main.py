@@ -4,7 +4,7 @@ import numpy as np
 import argparse
 from datetime import datetime
 from extremistan.data.adapters import YahooFinanceAdapter, CSVAdapter
-from extremistan.analytics.math_lib import get_log_returns, get_hill_alpha, calculate_drawdown, get_rolling_volatility, get_z_score
+from extremistan.analytics.math_lib import get_log_returns, get_hill_alpha, calculate_drawdown, get_rolling_volatility, get_z_score, get_rate_of_change
 from extremistan.strategy.signal_engine import SignalEngine
 from extremistan.ui.dashboard import MatplotlibDashboard
 
@@ -98,18 +98,9 @@ def main():
 
     print("[*] Calculating Tail Alphas (This may take a moment)...")
 
-    # 3a. Weekly Resampling for Weather Alpha
-    # Resample to weekly (Fri)
-    df_weekly = df['Log_Return'].resample('W-FRI').sum().to_frame() # Sum log returns for weekly log returns
-
-    # Calculate Weather Alpha (6M) on weekly data
-    # 6 months ~ 26 weeks
+    # 3a. Weather Alpha (6M) on Daily Data
     # Adaptive Hill Estimator
-    df_weekly['Alpha_6M'] = df_weekly['Log_Return'].rolling(window=26).apply(get_hill_alpha, raw=False, kwargs={'min_k': 4, 'adaptive': True})
-
-    # Reindex back to daily and ffill
-    # We want the weekly value to persist until the next week
-    df['Alpha_6M'] = df_weekly['Alpha_6M'].reindex(df.index).ffill()
+    df['Alpha_6M'] = df['Log_Return'].rolling(window=WEATHER_WINDOW).apply(get_hill_alpha, raw=False, kwargs={'min_k': 10, 'adaptive': True})
 
     # 3b. Climate Alpha (2Y) on Daily Data
     # Adaptive Hill Estimator
@@ -131,6 +122,10 @@ def main():
 
     # MOVE Index is already in df['MOVE']
 
+    # 3e. ROC Momentum Metrics (on Daily Data)
+    df['Alpha_6M_ROC'] = get_rate_of_change(df['Alpha_6M'], window=10) # 10-day momentum
+    df['MOVE_ROC'] = get_rate_of_change(df['MOVE'], window=5) # 5-day acute stress
+
     df['Drawdown'] = calculate_drawdown(df['SPX'])
 
     # 4. Strategy Signal
@@ -140,6 +135,9 @@ def main():
     df['Slope_Shift'] = df['Slope'].shift(1)
     df['MOVE_Shift'] = df['MOVE'].shift(1)
     df['Rolling_Sigma_Shift'] = df['Rolling_Sigma'].shift(1)
+    # Note: ROCs are also shifted to prevent look-ahead
+    df['Alpha_6M_ROC_Shift'] = df['Alpha_6M_ROC'].shift(1)
+    df['MOVE_ROC_Shift'] = df['MOVE_ROC'].shift(1)
 
     # Calculate Fragility Density (20-day rolling density of Weather < Climate) on Shifted Data
     df['Is_Fragile'] = (df['Alpha_6M_Shift'] < df['Alpha_2Y_Shift']).astype(int)
@@ -153,15 +151,62 @@ def main():
     df.loc[df['Alpha_6M_Shift'].isna() | df['Alpha_2Y_Shift'].isna(), 'Is_Healing'] = np.nan
     df['Healing_Density'] = df['Is_Healing'].rolling(window=20, min_periods=1).mean()
 
-    curr_alpha_2y = df['Alpha_2Y_Shift'].iloc[-1]
-    curr_alpha_6m = df['Alpha_6M_Shift'].iloc[-1]
-    curr_fragility_density = df['Fragility_Density'].iloc[-1]
-    curr_healing_density = df['Healing_Density'].iloc[-1]
+    # Strict T-1 Data Execution
+    # For live signals (assumed pre-market), we use the last available close (iloc[-1])
+    # of the SHIFTED columns (which represent T-1 data).
+    # Wait, if we run pre-market today (T), we want data from T-1 close.
+    # The dataframe index T-1 has data for T-1 close.
+    # If we shift(1), the row at T contains T-1 data.
+    # If the dataframe ends at T-1 (yesterday close), then `shift(1)` would push T-1 data to T (which doesn't exist yet).
+    # Actually, usually dataframes end at the last known close.
+    # If today is T (morning), we have data up to T-1.
+    # So the last row is T-1.
+    # If we want to evaluate the signal for today (T), we should use the data from T-1.
+    # `iloc[-1]` of the raw columns gives T-1 data.
+    # `iloc[-1]` of the SHIFTED columns gives T-2 data.
+    # The requirement is "Strict T-1 data".
+    # So we should use `iloc[-1]` of the UN-SHIFTED columns if the dataframe ends at T-1.
+    # Let's assume the dataframe contains all closed candles.
+    curr_alpha_2y = df['Alpha_2Y'].iloc[-1]
+    curr_alpha_6m = df['Alpha_6M'].iloc[-1]
+    curr_fragility_density = df['Fragility_Density'].iloc[-1] # This is calculated on shifted data, wait.
+    # Fragility density definition: rolling sum of shifted comparison.
+    # If we want density up to T-1, we need to calculate it on the T-1 data.
+    # The current implementation calculates `Is_Fragile` on Shifted data.
+    # Let's stick to the convention: All inputs to the signal engine must be T-1.
+    # If we pass `iloc[-1]` of unshifted columns, that is T-1 data.
+    # `Fragility_Density` uses `Alpha_6M_Shift`.
+    # `Fragility_Density` at index T-1 is the mean of `Is_Fragile` from T-20 to T-1.
+    # `Is_Fragile` at T-1 uses `Alpha_Shift` at T-1, which is `Alpha` at T-2.
+    # This seems like a double lag if we are not careful.
+
+    # REVISION for Strict T-1:
+    # We want the signal based on data available as of yesterday close.
+    # So we want `Alpha_2Y` at T-1, `Alpha_6M` at T-1.
+    # `Fragility_Density` should be the density over the last 20 days ending T-1.
+    # We should calculate `Is_Fragile_Raw` = `Alpha_6M` < `Alpha_2Y`.
+    # Then rolling mean of that.
+
+    # Let's re-calculate Density on unshifted data for the purpose of the "Current State"
+    df['Is_Fragile_Raw'] = (df['Alpha_6M'] < df['Alpha_2Y']).astype(int)
+    df.loc[df['Alpha_6M'].isna() | df['Alpha_2Y'].isna(), 'Is_Fragile_Raw'] = np.nan
+    df['Fragility_Density_Raw'] = df['Is_Fragile_Raw'].rolling(window=20, min_periods=1).mean()
+
+    df['Is_Healing_Raw'] = (df['Alpha_6M'] > df['Alpha_2Y']).astype(int)
+    df.loc[df['Alpha_6M'].isna() | df['Alpha_2Y'].isna(), 'Is_Healing_Raw'] = np.nan
+    df['Healing_Density_Raw'] = df['Is_Healing_Raw'].rolling(window=20, min_periods=1).mean()
+
+    curr_alpha_2y = df['Alpha_2Y'].iloc[-1]
+    curr_alpha_6m = df['Alpha_6M'].iloc[-1]
+    curr_fragility_density = df['Fragility_Density_Raw'].iloc[-1]
+    curr_healing_density = df['Healing_Density_Raw'].iloc[-1]
     curr_vix = df['VIX'].iloc[-1] if not pd.isna(df['VIX'].iloc[-1]) else 0.0
     curr_dd = df['Drawdown'].iloc[-1]
-    curr_slope = df['Slope_Shift'].iloc[-1]
-    curr_move = df['MOVE_Shift'].iloc[-1]
-    curr_vol_stress = df['Z_Score_Regime'].iloc[-1] # This is current shock, using z-score relative to regime
+    curr_slope = df['Slope'].iloc[-1]
+    curr_move = df['MOVE'].iloc[-1]
+    curr_vol_stress = df['Z_Score_Regime'].iloc[-1]
+    curr_alpha_6m_roc = df['Alpha_6M_ROC'].iloc[-1]
+    curr_move_roc = df['MOVE_ROC'].iloc[-1]
 
     engine = SignalEngine()
     signal_result = engine.evaluate(
@@ -171,7 +216,9 @@ def main():
         healing_density=curr_healing_density,
         slope=curr_slope,
         move_index=curr_move,
-        vol_stress=curr_vol_stress
+        vol_stress=curr_vol_stress,
+        alpha_6m_roc=curr_alpha_6m_roc,
+        move_roc=curr_move_roc
     )
 
     # 5. Reporting

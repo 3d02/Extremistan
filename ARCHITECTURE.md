@@ -16,10 +16,10 @@ The system is implemented as a structured Python package under `src/extremistan/
     *   `interfaces.py`: Defines the `DataSource` protocol.
 
 *   **`analytics/` (Analytics Engine)**
-    *   `math_lib.py`: Pure functions for financial mathematics (Log Returns, Adaptive Hill Estimator, Rolling Volatility, Z-Scores).
+    *   `math_lib.py`: Pure functions for financial mathematics (Log Returns, Adaptive Hill Estimator, Rolling Volatility, Z-Scores, Rate of Change).
 
 *   **`strategy/` (Strategy Layer)**
-    *   `signal_engine.py`: Contains `SignalEngine` class. Evaluates "Climate vs. Weather" logic with Cross-Asset Confirmation and returns a `SignalResult`.
+    *   `signal_engine.py`: Contains `SignalEngine` class. Evaluates "Climate vs. Weather" logic with Cross-Asset Confirmation (Level + Acute ROC) and Momentum Healing returns a `SignalResult`.
 
 *   **`ui/` (Presentation Layer)**
     *   `dashboard.py`: Contains `MatplotlibDashboard`. Renders the 4-Track visualization.
@@ -43,21 +43,22 @@ sequenceDiagram
     Main->>Data: get_data(SPX, VIX, MOVE, TNX, IRX)
     Data-->>Main: Raw DataFrame
 
-    Note over Main: 2. Normalization & Resampling
-    Main->>Main: Resample Weather Alpha to Weekly
+    Note over Main: 2. Normalization & Pre-Processing
+    Main->>Main: Standardize Ticker Columns
 
     Note over Main: 3. Analytics Processing
     Main->>Analytics: get_log_returns(SPX)
     Main->>Analytics: get_hill_alpha(LogReturns, adaptive=True)
+    Main->>Analytics: get_rate_of_change(Alpha, MOVE)
     Main->>Analytics: get_rolling_volatility(LogReturns)
     Main->>Analytics: calculate_drawdown(SPX)
-    Analytics-->>Main: Updated DataFrame (Alphas, Drawdown, RegimeMetrics)
+    Analytics-->>Main: Updated DataFrame (Alphas, ROCs, Drawdown, RegimeMetrics)
 
     Note over Main: 4. Backtesting Hygiene
-    Main->>Main: Shift(1) all indicators (Alphas, Slope, MOVE)
+    Main->>Main: Shift(1) all indicators (Alphas, Slope, MOVE, ROCs)
 
     Note over Main: 5. Signal Evaluation
-    Main->>Strategy: evaluate(Shifted_Alphas, Densities, CrossAsset)
+    Main->>Strategy: evaluate(Shifted_Alphas, Densities, CrossAsset, ROCs)
     Strategy-->>Main: SignalResult (GO/NO-GO)
 
     Note over Main: 6. Reporting & Visualization
