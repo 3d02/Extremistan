@@ -16,16 +16,16 @@ The system is implemented as a structured Python package under `src/extremistan/
     *   `interfaces.py`: Defines the `DataSource` protocol.
 
 *   **`analytics/` (Analytics Engine)**
-    *   `math_lib.py`: Pure functions for financial mathematics (Log Returns, Hill Estimator, Drawdown).
+    *   `math_lib.py`: Pure functions for financial mathematics (Log Returns, Adaptive Hill Estimator, Rolling Volatility, Z-Scores).
 
 *   **`strategy/` (Strategy Layer)**
-    *   `signal_engine.py`: Contains `SignalEngine` class. Evaluates "Climate vs. Weather" logic and returns a `SignalResult` (GO/NO-GO).
+    *   `signal_engine.py`: Contains `SignalEngine` class. Evaluates "Climate vs. Weather" logic with Cross-Asset Confirmation and returns a `SignalResult`.
 
 *   **`ui/` (Presentation Layer)**
     *   `dashboard.py`: Contains `MatplotlibDashboard`. Renders the 4-Track visualization.
 
 *   **`main.py` (Orchestration)**
-    *   The entry point of the application. Handles configuration, data normalization, and orchestrates the flow between modules.
+    *   The entry point of the application. Handles configuration, data normalization, weekly resampling, signal synchronization (lagging), and orchestrates the flow.
 
 ### 2.2 Component Interaction
 
@@ -40,22 +40,27 @@ sequenceDiagram
     participant UI as UI Layer
 
     Note over Main: 1. Configuration & Setup
-    Main->>Data: get_data(tickers)
+    Main->>Data: get_data(SPX, VIX, MOVE, TNX, IRX)
     Data-->>Main: Raw DataFrame
 
-    Note over Main: 2. Normalization (Mapping columns to SPX/VIX)
+    Note over Main: 2. Normalization & Resampling
+    Main->>Main: Resample Weather Alpha to Weekly
 
     Note over Main: 3. Analytics Processing
     Main->>Analytics: get_log_returns(SPX)
-    Main->>Analytics: get_hill_alpha(LogReturns)
+    Main->>Analytics: get_hill_alpha(LogReturns, adaptive=True)
+    Main->>Analytics: get_rolling_volatility(LogReturns)
     Main->>Analytics: calculate_drawdown(SPX)
-    Analytics-->>Main: Updated DataFrame (Alphas, Drawdown)
+    Analytics-->>Main: Updated DataFrame (Alphas, Drawdown, RegimeMetrics)
 
-    Note over Main: 4. Signal Evaluation
-    Main->>Strategy: evaluate(Alpha_2Y, Alpha_6M, Fragility_Density)
+    Note over Main: 4. Backtesting Hygiene
+    Main->>Main: Shift(1) all indicators (Alphas, Slope, MOVE)
+
+    Note over Main: 5. Signal Evaluation
+    Main->>Strategy: evaluate(Shifted_Alphas, Densities, CrossAsset)
     Strategy-->>Main: SignalResult (GO/NO-GO)
 
-    Note over Main: 5. Reporting & Visualization
+    Note over Main: 6. Reporting & Visualization
     Main->>Main: Print Text Report
     Main->>UI: render(DataFrame, Context)
 ```
@@ -64,9 +69,9 @@ sequenceDiagram
 
 While the code is physically modular, `main.py` retains significant logic that belongs in specific layers:
 
-1.  **Normalization Logic:** `main.py` manually maps columns (e.g., checks for `^GSPC`, `Close`, or `SPX`) and handles `NaN` values for VIX. This logic is tightly coupled to specific data sources.
+1.  **Normalization & Resampling:** `main.py` manually maps columns and handles the resampling for weekly alpha. This logic is complex and could be encapsulated.
 2.  **Orchestration Overload:** The script linearizes the entire process. There is no `Application` class wrapping the lifecycle.
-3.  **Reporting:** Text-based output is printed directly to `stdout` within `main.py`, making it hard to redirect or format differently (e.g., export to PDF).
+3.  **Reporting:** Text-based output is printed directly to `stdout` within `main.py`.
 
 ---
 

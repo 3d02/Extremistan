@@ -5,7 +5,12 @@
 ### Yahoo Finance (Public API)
 *   **Type:** Web API / Scraper
 *   **Library:** `yfinance` (Python)
-*   **Coverage:** S&P 500 Index (`^GSPC`) and CBOE Volatility Index (`^VIX`).
+*   **Coverage:**
+    *   S&P 500 Index (`^GSPC`)
+    *   CBOE Volatility Index (`^VIX`)
+    *   ICE BofAML MOVE Index (`^MOVE`) - Measures bond market volatility.
+    *   10-Year Treasury Yield (`^TNX`) - Used for term structure slope.
+    *   13-Week Treasury Bill Yield (`^IRX`) - Used as short-end proxy for term structure slope.
 *   **Cost:** Free
 *   **Limitations:**
     *   Rate limits may apply.

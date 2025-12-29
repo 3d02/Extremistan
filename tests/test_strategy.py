@@ -4,9 +4,10 @@ from extremistan.strategy.signal_engine import SignalEngine
 def test_signal_go():
     engine = SignalEngine()
     # 2Y is very low (risk), High Fragility Density (>0.5)
+    # Standard GO (Fragility only), no Cross-Asset Stress
     res = engine.evaluate(alpha_2y=2.5, alpha_6m=2.0, fragility_density=0.6)
     assert res.signal == "GO"
-    assert "High Conviction" in res.description
+    assert "Fragile Regime" in res.description
     assert "Density 60%" in res.description
 
 def test_signal_watch_low_density():

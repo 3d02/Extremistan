@@ -4,24 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-### Changed
-- Updated `ARCHITECTURE.md` to reflect the modular package structure and document remaining coupling.
-
 ### Added
-- Added CLI entry point `extremistan` in `pyproject.toml`.
-- Added "Installation and Setup" section to `README.md` with detailed instructions for venv and pip install.
-- Created `AGENTS.md` to define project governance and rules for AI agents.
-- Added `docs/logic_review.md` with a quantitative critique and improvement plan for the fragility logic.
-- Enforced strict format for Architecture Decision Records (ADRs).
-- Documented semantic consistency rules for file updates.
-- Modular architecture implementation (`src/extremistan`).
-- `Analytics` layer with pure math functions.
-- `Data` layer with local Caching (Parquet) and Adapters (Yahoo, CSV).
-- `Strategy` layer for signal generation.
-- `UI` layer abstracting Matplotlib dashboard.
-- `pytest` test suite.
+- **Adaptive Hill Estimator:** Implemented Danielsson–de Vries heuristic (`k ≈ sqrt(n)`) for robust tail estimation in `math_lib.py`.
+- **Cross-Asset Signals:** Integrated `^MOVE` (Bond Volatility), `^TNX` (10Y Yield), and `^IRX` (3M Yield) to detect macro stress.
+- **Symmetric Healing:** Added "Healing Density" metric to downgrade signals when risk dissipates.
+- **Weekly Resampling:** "Weather" Alpha (6M) is now calculated on weekly data to reduce noise and autocorrelation.
+- **Regime Metrics:** Added Rolling 5Y Volatility and Z-Score calculations.
+- **ADR 0004:** Documented the decision to adopt adaptive estimation and cross-asset logic.
 
 ### Changed
+- **Backtesting Hygiene:** Applied 1-day lag (`shift(1)`) to all strategic indicators to eliminate look-ahead bias.
+- **Signal Logic:** Updated `SignalEngine` to consume Cross-Asset and Healing metrics for "High Conviction" or "WATCH" states.
+- **Data Ingestion:** Updated `main.py` and `DATA_SOURCES.md` to fetch and handle new tickers.
+- **Specification:** Updated `SPEC.md` to reflect new mathematical and strategic assumptions.
+- Updated `ARCHITECTURE.md` to reflect the modular package structure and document remaining coupling.
 - Standardized ADR filenames (renamed `001` to `0002`) and format (added `Alternatives Considered`).
 - Updated `CONTRIBUTING.md` to include governance sections.
 - Refactored monolithic `extremistan.py` into a structured Python package.
