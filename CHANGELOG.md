@@ -28,6 +28,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - Enabled local test runs by adding package initializers and a pytest path shim so `extremistan` imports resolve without installation.
+- Added `setuptools` to runtime dependencies to resolve `ModuleNotFoundError: No module named 'distutils'` on Python 3.12+.
 
 ## [0.1.0] - 2023-10-27
 
