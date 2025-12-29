@@ -1,4 +1,4 @@
-# ADR 0002: Adaptive Tail Estimation and Cross-Asset Signals
+# ADR 0004: Adaptive Tail Estimation and Cross-Asset Signals
 
 ## Status
 Accepted

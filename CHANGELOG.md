@@ -10,7 +10,7 @@ All notable changes to this project will be documented in this file.
 - **Symmetric Healing:** Added "Healing Density" metric to downgrade signals when risk dissipates.
 - **Weekly Resampling:** "Weather" Alpha (6M) is now calculated on weekly data to reduce noise and autocorrelation.
 - **Regime Metrics:** Added Rolling 5Y Volatility and Z-Score calculations.
-- **ADR 0002:** Documented the decision to adopt adaptive estimation and cross-asset logic.
+- **ADR 0004:** Documented the decision to adopt adaptive estimation and cross-asset logic.
 
 ### Changed
 - **Backtesting Hygiene:** Applied 1-day lag (`shift(1)`) to all strategic indicators to eliminate look-ahead bias.
