@@ -16,7 +16,7 @@ TNX_TICKER = "^TNX"
 IRX_TICKER = "^IRX"
 START_DATE = "1927-12-30"
 CLIMATE_WINDOW = 504  # 2 Years
-WEATHER_WINDOW_WEEKS = 26   # 6 Months (Weekly)
+WEATHER_WINDOW = 126   # 6 Months
 
 def main():
     parser = argparse.ArgumentParser(description="Extremistan Tail Risk Monitor")
@@ -102,14 +102,14 @@ def main():
     # Resample to weekly (Fri)
     df_weekly = df['Log_Return'].resample('W-FRI').sum().to_frame() # Sum log returns for weekly log returns
 
-    # Calculate Weather Alpha (26 Weeks) on weekly data
+    # Calculate Weather Alpha (6M) on weekly data
     # 6 months ~ 26 weeks
     # Adaptive Hill Estimator
-    df_weekly['Alpha_26W'] = df_weekly['Log_Return'].rolling(window=WEATHER_WINDOW_WEEKS).apply(get_hill_alpha, raw=False, kwargs={'min_k': 4, 'adaptive': True})
+    df_weekly['Alpha_6M'] = df_weekly['Log_Return'].rolling(window=26).apply(get_hill_alpha, raw=False, kwargs={'min_k': 4, 'adaptive': True})
 
     # Reindex back to daily and ffill
     # We want the weekly value to persist until the next week
-    df['Alpha_26W'] = df_weekly['Alpha_26W'].reindex(df.index).ffill()
+    df['Alpha_6M'] = df_weekly['Alpha_6M'].reindex(df.index).ffill()
 
     # 3b. Climate Alpha (2Y) on Daily Data
     # Adaptive Hill Estimator
@@ -135,26 +135,26 @@ def main():
 
     # 4. Strategy Signal
     # Shift indicators by 1 day to prevent look-ahead bias
-    df['Alpha_26W_Shift'] = df['Alpha_26W'].shift(1)
+    df['Alpha_6M_Shift'] = df['Alpha_6M'].shift(1)
     df['Alpha_2Y_Shift'] = df['Alpha_2Y'].shift(1)
     df['Slope_Shift'] = df['Slope'].shift(1)
     df['MOVE_Shift'] = df['MOVE'].shift(1)
     df['Rolling_Sigma_Shift'] = df['Rolling_Sigma'].shift(1)
 
     # Calculate Fragility Density (20-day rolling density of Weather < Climate) on Shifted Data
-    df['Is_Fragile'] = (df['Alpha_26W_Shift'] < df['Alpha_2Y_Shift']).astype(int)
+    df['Is_Fragile'] = (df['Alpha_6M_Shift'] < df['Alpha_2Y_Shift']).astype(int)
     # Mask Is_Fragile as NaN if either alpha is NaN
-    df.loc[df['Alpha_26W_Shift'].isna() | df['Alpha_2Y_Shift'].isna(), 'Is_Fragile'] = np.nan
+    df.loc[df['Alpha_6M_Shift'].isna() | df['Alpha_2Y_Shift'].isna(), 'Is_Fragile'] = np.nan
     df['Fragility_Density'] = df['Is_Fragile'].rolling(window=20, min_periods=1).mean()
 
     # Calculate Healing Density (20-day rolling density of Weather > Climate) on Shifted Data
-    df['Is_Healing'] = (df['Alpha_26W_Shift'] > df['Alpha_2Y_Shift']).astype(int)
+    df['Is_Healing'] = (df['Alpha_6M_Shift'] > df['Alpha_2Y_Shift']).astype(int)
     # Mask Is_Healing as NaN if either alpha is NaN
-    df.loc[df['Alpha_26W_Shift'].isna() | df['Alpha_2Y_Shift'].isna(), 'Is_Healing'] = np.nan
+    df.loc[df['Alpha_6M_Shift'].isna() | df['Alpha_2Y_Shift'].isna(), 'Is_Healing'] = np.nan
     df['Healing_Density'] = df['Is_Healing'].rolling(window=20, min_periods=1).mean()
 
     curr_alpha_2y = df['Alpha_2Y_Shift'].iloc[-1]
-    curr_alpha_26w = df['Alpha_26W_Shift'].iloc[-1]
+    curr_alpha_6m = df['Alpha_6M_Shift'].iloc[-1]
     curr_fragility_density = df['Fragility_Density'].iloc[-1]
     curr_healing_density = df['Healing_Density'].iloc[-1]
     curr_vix = df['VIX'].iloc[-1] if not pd.isna(df['VIX'].iloc[-1]) else 0.0
@@ -166,7 +166,7 @@ def main():
     engine = SignalEngine()
     signal_result = engine.evaluate(
         curr_alpha_2y,
-        curr_alpha_26w,
+        curr_alpha_6m,
         fragility_density=curr_fragility_density,
         healing_density=curr_healing_density,
         slope=curr_slope,
@@ -186,7 +186,7 @@ def main():
     print(f"Today's Shock:      {(df['Log_Return'].iloc[-1] / lifetime_sigma):.2f}σ")
     print("-" * 60)
     print(f"Climate Alpha (2Y): {curr_alpha_2y:.2f}  [{'Extremistan' if curr_alpha_2y < 3 else 'Mediocristan'}]")
-    print(f"Weather Alpha (26W): {curr_alpha_26w:.2f}  [{'Fragilizing' if curr_alpha_26w < curr_alpha_2y else 'Healing'}]")
+    print(f"Weather Alpha (6M): {curr_alpha_6m:.2f}  [{'Fragilizing' if curr_alpha_6m < curr_alpha_2y else 'Healing'}]")
     print("-" * 60)
     print(f"STRATEGIC SIGNAL:   {signal_result.signal} ({signal_result.description})")
     print("="*60)
