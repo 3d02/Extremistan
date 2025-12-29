@@ -1,5 +1,5 @@
 import pytest
-from src.extremistan.strategy.signal_engine import SignalEngine
+from extremistan.strategy.signal_engine import SignalEngine
 
 def test_signal_go():
     engine = SignalEngine()

@@ -3,10 +3,10 @@ import pandas as pd
 import numpy as np
 import argparse
 from datetime import datetime
-from src.extremistan.data.adapters import YahooFinanceAdapter, CSVAdapter
-from src.extremistan.analytics.math_lib import get_log_returns, get_hill_alpha, calculate_drawdown
-from src.extremistan.strategy.signal_engine import SignalEngine
-from src.extremistan.ui.dashboard import MatplotlibDashboard
+from extremistan.data.adapters import YahooFinanceAdapter, CSVAdapter
+from extremistan.analytics.math_lib import get_log_returns, get_hill_alpha, calculate_drawdown
+from extremistan.strategy.signal_engine import SignalEngine
+from extremistan.ui.dashboard import MatplotlibDashboard
 
 # Configuration
 TICKER = "^GSPC"

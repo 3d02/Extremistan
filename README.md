@@ -71,11 +71,58 @@ The model uses daily resolution. While intra-day data provides more points, it i
 
 ## Implementation
 
-**Executable:** `extremistan.py`
+**Executable:** `extremistan` (via CLI)
 
 **Primary Dependencies:** `yfinance`, `pandas`, `numpy`, `matplotlib`.
 
+## Installation and Setup
+
+### Prerequisites
+- Python 3.9 or higher.
+
+### 1. Setup Virtual Environment
+It is recommended to run this project in an isolated virtual environment (`venv`).
+
+#### macOS / Linux
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+#### Windows
+```powershell
+python -m venv venv
+.\venv\Scripts\activate
+```
+
+### 2. Install Project
+Once the virtual environment is active, install the project in editable mode:
+
+```bash
+# Standard installation
+pip install .
+
+# Installation with development dependencies (for testing)
+pip install .[dev]
+```
+
+## Usage
+
+After installation, the `extremistan` command is available globally within your virtual environment.
+
+### Online Mode (Default)
+Fetches live data from Yahoo Finance.
+```bash
+extremistan
+```
+
+### Offline Mode
+Runs the analysis using the bundled historical CSV data. Useful for backtesting or when internet access is unavailable.
+```bash
+extremistan --offline --csv-path data_storage/sp500_history_1927_2025.csv
+```
+
 **Usage Logic:**
-1. **Initialize:** `python extremistan.py`
+1. **Initialize:** Run `extremistan` (or with flags).
 2. **Analysis:** Review the STDOUT for the Strategic Signal.
 3. **Execution:** If Signal is "GO," target the strike price calculated for the -5$\sigma$ level.
