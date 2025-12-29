@@ -64,3 +64,10 @@ Before submitting changes, verify the following have been updated if affected:
 - [ ] **Architecture**: ADRs (if a decision changed) or `ARCHITECTURE.md`.
 - [ ] **Changelog**: Add an entry for the change.
 - [ ] **README**: Update installation or usage instructions.
+
+## 4. Signal Engine & Probabilistic Regime
+
+The project has evolved from discrete signals to a Probabilistic Regime approach (ADR 0007).
+*   **State of the World:** The core input vector is `[Alpha_2Y, Alpha_6M, Slope, VIX, VIX_Curve, SKEW]`.
+*   **Methodology:** Use Nearest Neighbor Search on standardized history to estimate option probabilities.
+*   **Look-ahead Bias:** Strictly enforced. Live signals must use data available at T-1 close.

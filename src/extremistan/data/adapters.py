@@ -65,38 +65,43 @@ class YahooFinanceAdapter(DataSource):
             return pd.DataFrame()
 
         # 3. Standardize Structure
-        # We expect specific columns SPX and VIX usually.
-        # But this adapter should be generic enough to return the raw data frame
-        # or a standardized one.
-        # For this specific project, the consuming code expects columns 'SPX' and 'VIX'.
-        # However, the Adapter should probably return the multi-index or flattened frame
-        # and let the caller map it, OR map it here if we know the mapping.
-
-        # Let's standardize here to match the target architecture requirements:
         # "Pandas as Common Tongue: All modules exchange data via Pandas DataFrames/Series."
 
-        # For simplicity in this project context, we will try to extract 'Close' prices.
+        # We handle multi-index outputs from yfinance
         try:
-             # Handle MultiIndex vs Single Index
-            if isinstance(data.columns, pd.MultiIndex):
-                # data['Close'] contains columns for each ticker
-                df_close = data['Close'].copy()
-            else:
-                # Single ticker, data columns are 'Open', 'High', 'Low', 'Close', ...
-                # We rename 'Close' to the ticker name for consistency if we can
-                # But yf.download usually returns multiindex if list passed, even of length 1?
-                # Actually yf.download(..., group_by='column') is default.
-                if 'Close' in data.columns:
-                     df_close = pd.DataFrame(data['Close'])
-                     # If only one ticker requested, we might not know its name here easily
-                     # without looking at input `tickers`.
-                     if len(tickers) == 1:
-                         df_close.columns = tickers
-                else:
-                    df_close = data # Fallback
+            df_close = pd.DataFrame()
 
-            # Ensure index is DatetimeIndex
+            # Check if we have a MultiIndex columns (happens when downloading multiple tickers)
+            if isinstance(data.columns, pd.MultiIndex):
+                # If 'Close' is at the top level
+                if 'Close' in data.columns.levels[0]:
+                    df_close = data['Close'].copy()
+                # If 'Close' is at the second level (some versions of yf)
+                elif 'Close' in data.columns.get_level_values(1):
+                    # We need to extract the 'Close' slice
+                     df_close = data.xs('Close', level=1, axis=1).copy()
+                else:
+                     # Fallback to just using the data as is, assuming user knows structure
+                     # Or try to find 'Close'
+                     if 'Close' in data.columns:
+                         df_close = data['Close'].copy()
+                     else:
+                         df_close = data.copy() # Last resort
+
+            else:
+                # Single level index
+                if 'Close' in data.columns:
+                    df_close = pd.DataFrame(data['Close'])
+                    # If only one ticker requested, rename column to ticker
+                    if len(tickers) == 1:
+                        df_close.columns = tickers
+                else:
+                    df_close = data.copy()
+
+            # Ensure index is DatetimeIndex and timezone-naive to prevent merge issues
             df_close.index = pd.to_datetime(df_close.index)
+            if df_close.index.tz is not None:
+                df_close.index = df_close.index.tz_localize(None)
 
             # 4. Save to Cache
             if self.store:
