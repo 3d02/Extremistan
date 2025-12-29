@@ -18,7 +18,8 @@
 *   **Fragility Persistence (Density Rule):** Unlike simple crossover signals which can be noisy, we require "Fragility Persistence." A GO signal triggers only when the Weather Alpha (< 6M) has been structurally below the Climate Alpha (> 2Y) for a significant density (> 50%) of the recent 20-day window.
 *   **Symmetric Healing:** A "Healing Density" (> 50% of Weather > Climate) is used to explicitly downgrade conviction or exit trades, preventing "holding on" to protection after the danger has passed.
 *   **Cross-Asset Confirmation:** Equity fragility is validated against macro stress indicators:
-    *   **Term Structure Slope:** Inversion (10Y < 3M/2Y) signals recession risk.
+    *   **Term Structure Slope:** Inversion (10Y < 3M) signals recession risk. We utilize the Federal Reserve series `T10Y3M` (10-Year Treasury Constant Maturity Minus 3-Month Treasury Constant Maturity) sourced from FRED.
+        *   *Fallback:* If FRED data is unavailable, we approximate using Yahoo Finance (`^TNX` - `^IRX`).
     *   **MOVE Index:**
         *   Level > 120: Systemic stress.
         *   Acute ROC > 10% (5-day): Rapid deterioration.

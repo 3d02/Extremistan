@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import argparse
 from datetime import datetime
-from extremistan.data.adapters import YahooFinanceAdapter, CSVAdapter
+from extremistan.data.adapters import YahooFinanceAdapter, CSVAdapter, FredAdapter
 from extremistan.analytics.math_lib import get_log_returns, get_hill_alpha, calculate_drawdown, get_rolling_volatility, get_z_score, get_rate_of_change
 from extremistan.strategy.signal_engine import SignalEngine
 from extremistan.ui.dashboard import MatplotlibDashboard
@@ -14,6 +14,7 @@ VIX_TICKER = "^VIX"
 MOVE_TICKER = "^MOVE"
 TNX_TICKER = "^TNX"
 IRX_TICKER = "^IRX"
+SLOPE_TICKER = "T10Y3M" # FRED Series ID
 START_DATE = "1927-12-30"
 CLIMATE_WINDOW = 504  # 2 Years
 WEATHER_WINDOW = 126   # 6 Months
@@ -39,12 +40,35 @@ def main():
         # We will try to fetch it.
         # If the user runs offline, we rely on what's in the CSV.
         tickers_to_fetch = ['SPX', 'VIX'] # Hypothetical columns in CSV
+        df_raw = adapter.get_data(tickers_to_fetch, start_date=START_DATE)
     else:
         print("[*] Mode: ONLINE (Yahoo Finance + Cache)")
-        adapter = YahooFinanceAdapter(use_cache=True)
-        tickers_to_fetch = [TICKER, VIX_TICKER, MOVE_TICKER, TNX_TICKER, IRX_TICKER]
 
-    df_raw = adapter.get_data(tickers_to_fetch, start_date=START_DATE)
+        # Yahoo Data
+        adapter_yahoo = YahooFinanceAdapter(use_cache=True)
+        tickers_yahoo = [TICKER, VIX_TICKER, MOVE_TICKER, TNX_TICKER, IRX_TICKER]
+        df_yahoo = adapter_yahoo.get_data(tickers_yahoo, start_date=START_DATE)
+
+        # FRED Data
+        print("[*] Fetching Economic Data from FRED...")
+        adapter_fred = FredAdapter(use_cache=True)
+        df_fred = adapter_fred.get_data([SLOPE_TICKER], start_date=START_DATE)
+
+        # Merge Data
+        if df_yahoo.empty:
+            df_raw = pd.DataFrame()
+        else:
+            # Outer merge to keep all dates, but since we analyze primarily SPX,
+            # we could left join. However, signals might need macro data even if market is closed?
+            # No, we need aligned data. Let's join on index.
+
+            # Fix Timezones (Yahoo is usually tz-aware, FRED is naive)
+            if not df_yahoo.empty and df_yahoo.index.tz is not None:
+                df_yahoo.index = df_yahoo.index.tz_localize(None)
+            if not df_fred.empty and df_fred.index.tz is not None:
+                df_fred.index = df_fred.index.tz_localize(None)
+
+            df_raw = df_yahoo.join(df_fred, how='outer')
 
     if df_raw.empty:
         print("[!] Error: No data retrieved.")
@@ -118,7 +142,11 @@ def main():
     # 3d. Cross-Asset Metrics
     # Term Structure Slope (10Y - 3M). 2Y would be ideal but using what we have.
     # Note: Yields are in percent, e.g. 4.12.
-    df['Slope'] = df['TNX'] - df['IRX']
+    if SLOPE_TICKER in df_raw.columns:
+        df['Slope'] = df_raw[SLOPE_TICKER]
+    else:
+        # Fallback if FRED fetch failed
+        df['Slope'] = df['TNX'] - df['IRX']
 
     # MOVE Index is already in df['MOVE']
 
