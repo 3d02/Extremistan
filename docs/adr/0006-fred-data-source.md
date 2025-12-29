@@ -10,18 +10,18 @@ However, the user requested to use the specific `T10Y3M` series (10-Year Treasur
 Yahoo Finance does not consistently provide `T10Y3M`.
 
 ## Decision
-We decided to integrate FRED as a secondary data source.
+We decided to integrate FRED as a secondary data source and strictly use it for Term Structure Slope calculations.
 1.  Added `pandas-datareader` dependency to fetch data from FRED.
 2.  Implemented `FredAdapter` in `src/extremistan/data/adapters.py`.
 3.  Updated `main.py` to fetch `T10Y3M` from FRED and merge it with Yahoo Finance data.
-4.  Updated the Slope calculation to prefer `T10Y3M` when available, falling back to the calculated spread if necessary.
+4.  **Strict Dependency:** The Slope calculation now *only* uses `T10Y3M`. We removed the fallback approximation (`^TNX - ^IRX`) because subtracting a Discount Rate (`^IRX`) from an Investment Yield (`^TNX`) is methodologically incorrect.
 
 ## Consequences
-*   **Accuracy:** Slope calculations now align with the standard Federal Reserve definition.
+*   **Accuracy:** Slope calculations now align with the standard Federal Reserve definition and avoid calculation errors from incompatible yield types.
 *   **Dependency:** Added `pandas-datareader` dependency.
 *   **Data Integrity:** Requires alignment of data from two different sources (Yahoo and FRED), which is handled via index joining.
 *   **Offline Mode:** Offline data CSVs must now include the `T10Y3M` column. A script `scripts/fetch_offline_data.py` was created to facilitate this.
 
 ## Alternatives Considered
-*   **Manual Calculation:** Continuing to use `^TNX - ^IRX`. Rejected because the user specifically requested `T10Y3M`.
+*   **Manual Calculation:** Continuing to use `^TNX - ^IRX`. Rejected because it is methodologically incorrect (Discount Rate vs Investment Yield).
 *   **Manual FRED CSV:** Downloading CSV manually. Rejected because it complicates the automated pipeline.

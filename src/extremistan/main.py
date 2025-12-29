@@ -12,8 +12,6 @@ from extremistan.ui.dashboard import MatplotlibDashboard
 TICKER = "^GSPC"
 VIX_TICKER = "^VIX"
 MOVE_TICKER = "^MOVE"
-TNX_TICKER = "^TNX"
-IRX_TICKER = "^IRX"
 SLOPE_TICKER = "T10Y3M" # FRED Series ID
 START_DATE = "1927-12-30"
 CLIMATE_WINDOW = 504  # 2 Years
@@ -46,7 +44,7 @@ def main():
 
         # Yahoo Data
         adapter_yahoo = YahooFinanceAdapter(use_cache=True)
-        tickers_yahoo = [TICKER, VIX_TICKER, MOVE_TICKER, TNX_TICKER, IRX_TICKER]
+        tickers_yahoo = [TICKER, VIX_TICKER, MOVE_TICKER]
         df_yahoo = adapter_yahoo.get_data(tickers_yahoo, start_date=START_DATE)
 
         # FRED Data
@@ -103,16 +101,6 @@ def main():
     else:
         df['MOVE'] = np.nan
 
-    if TNX_TICKER in df_raw.columns:
-        df['TNX'] = df_raw[TNX_TICKER]
-    else:
-        df['TNX'] = np.nan
-
-    if IRX_TICKER in df_raw.columns:
-        df['IRX'] = df_raw[IRX_TICKER]
-    else:
-        df['IRX'] = np.nan
-
     # 3. Analytics
     df['Log_Return'] = get_log_returns(df['SPX'])
     df = df.dropna(subset=['Log_Return'])
@@ -140,13 +128,12 @@ def main():
     df['Z_Score_Regime'] = (df['Log_Return'] - df['Rolling_Mean']) / df['Rolling_Sigma']
 
     # 3d. Cross-Asset Metrics
-    # Term Structure Slope (10Y - 3M). 2Y would be ideal but using what we have.
-    # Note: Yields are in percent, e.g. 4.12.
+    # Term Structure Slope (10Y - 3M).
+    # Note: We rely strictly on FRED data (T10Y3M) as it properly represents the spread.
     if SLOPE_TICKER in df_raw.columns:
         df['Slope'] = df_raw[SLOPE_TICKER]
     else:
-        # Fallback if FRED fetch failed
-        df['Slope'] = df['TNX'] - df['IRX']
+        df['Slope'] = np.nan
 
     # MOVE Index is already in df['MOVE']
 

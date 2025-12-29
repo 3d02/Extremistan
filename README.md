@@ -104,7 +104,6 @@ We don't want to hold protection forever.
 Stock markets can be irrational. Bond markets are usually smarter. We check two other sensors:
 1.  **Slope Yield Curve (`T10Y3M`):** We use the Federal Reserve series "10-Year Treasury Constant Maturity Minus 3-Month Treasury Constant Maturity". When this is negative (Inversion), a recession is likely.
     *   *Source:* Federal Reserve Economic Data (FRED).
-    *   *Fallback:* If FRED is unavailable, we approximate using Yahoo Finance (`^TNX` - `^IRX`).
 2.  **MOVE Index (`^MOVE`):** The "VIX for Bonds".
     *   **Level Stress:** > 120.
     *   **Acute Stress (ROC):** > +10% increase in 5 days.
