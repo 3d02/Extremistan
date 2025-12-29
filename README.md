@@ -40,8 +40,8 @@ This track plots the S&P 500 on a logarithmic scale alongside the VIX Index.
 **Reasoning:** We seek "divergence." If the VIX (Implied Volatility) is low while our calculated Alpha is also low, it signifies that market participants are complacent despite structural fragility. This is the optimal entry for long-volatility positions.
 
 ### Track 2: Signal Engine (Climate vs. Weather)
-Plots the 2-year and 6-month Hill Alphas.
-**Reasoning:** The intersection of these lines defines the strategic regime. A "GO" signal is generated when the Weather Alpha crosses below the Climate Alpha while in a sub-3.0 zone.
+Plots the 2-year Climate Alpha (Line) and 6-month Weather Alpha (Points).
+**Reasoning:** We use an "Honest Statistician's" approach. The 6-Month Weather Alpha is often sparse; plotting it as points prevents the illusion of a continuous trend. A "GO" signal is generated based on **Fragility Persistence**: when the density of Weather points falling below the Climate line exceeds 50% over a 20-day window, signaling a structural shift rather than transient noise.
 
 ### Track 3: Pain Monitor (Drawdown)
 Calculates the current percentage drop from the High-Water Mark (HWM):

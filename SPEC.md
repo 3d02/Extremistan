@@ -14,6 +14,7 @@
 
 ### 1.3 Strategic Logic
 *   **Ghost Effect:** A low 2-year Alpha (high risk) might be a lag artifact from a crash 18 months ago. Comparing it to the 6-month Alpha allows us to distinguish between "healing" markets and "deteriorating" markets.
+*   **Fragility Persistence (Density Rule):** Unlike simple crossover signals which can be noisy, we require "Fragility Persistence." A GO signal triggers only when the Weather Alpha (< 6M) has been structurally below the Climate Alpha (> 2Y) for a significant density (> 50%) of the recent 20-day window.
 *   **Regime Divergence:** The most profitable trades occur when implied volatility (VIX) is low (market is complacent) but structural fragility (Hill Alpha) is high.
 
 ---

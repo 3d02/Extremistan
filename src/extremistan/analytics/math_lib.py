@@ -8,13 +8,14 @@ def get_log_returns(series: pd.Series) -> pd.Series:
     """
     return np.log(series / series.shift(1))
 
-def get_hill_alpha(series: pd.Series, k_pct: float = 0.05) -> float:
+def get_hill_alpha(series: pd.Series, k_pct: float = 0.05, min_k: int = 10) -> float:
     """
     Calculates the Hill Estimator for Tail Index Alpha.
 
     Args:
         series: Pandas Series of returns (usually log returns).
         k_pct: The percentage of tail observations to consider (default 0.05).
+        min_k: The minimum number of tail observations required to calculate Alpha (default 10).
 
     Returns:
         float: The Hill Index (Alpha). Returns np.nan if insufficient data.
@@ -28,7 +29,7 @@ def get_hill_alpha(series: pd.Series, k_pct: float = 0.05) -> float:
         return np.nan
 
     k = int(n * k_pct)
-    if k < 10:
+    if k < min_k:
         return np.nan
 
     # Sort losses descending (largest loss first)
