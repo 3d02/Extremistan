@@ -7,7 +7,7 @@ from typing import List
 
 # Configuration
 YAHOO_TICKERS = ["^GSPC", "^VIX", "^MOVE"]
-FRED_TICKERS = ["T10Y3M"]
+FRED_TICKERS = ["T10Y3M", "USREC"]
 START_DATE = "1927-12-30"
 OUTPUT_PATH = "data_storage/sp500_history_1927_2025.csv"
 

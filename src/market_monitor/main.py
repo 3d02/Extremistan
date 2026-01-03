@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 TICKER_SPX = "^GSPC"
 TICKER_VIX = "^VIX"
 TICKER_SLOPE = "T10Y3M" # FRED Series ID
+TICKER_RECESSION = "USREC" # FRED Recession Indicator
 DEFAULT_START_DATE = "1927-12-30"
 
 def main():
@@ -43,11 +44,13 @@ def main():
         df_spx = store.load(TICKER_SPX)
         df_vix = store.load(TICKER_VIX)
         df_slope = store.load(TICKER_SLOPE)
+        df_recession = store.load(TICKER_RECESSION)
     else:
         logger.info("[*] Mode: ONLINE (Delta Sync)")
         df_spx = fetch_and_update(TICKER_SPX, adapter_yahoo, store, DEFAULT_START_DATE)
         df_vix = fetch_and_update(TICKER_VIX, adapter_yahoo, store, "1990-01-01") # VIX usually starts 1990
         df_slope = fetch_and_update(TICKER_SLOPE, adapter_fred, store, DEFAULT_START_DATE)
+        df_recession = fetch_and_update(TICKER_RECESSION, adapter_fred, store, "1850-01-01") # Fetch full history
 
     if df_spx is None or df_spx.empty:
         logger.error("[!] Error: No SPX data available.")
@@ -80,6 +83,8 @@ def main():
             return df_in['VIX']
         elif 'T10Y3M' in df_in.columns:
             return df_in['T10Y3M']
+        elif 'USREC' in df_in.columns:
+            return df_in['USREC']
         else:
             return df_in.iloc[:, 0]
 
@@ -89,10 +94,12 @@ def main():
     # Usually we want to align to SPX index.
     s_vix = extract_series(df_vix, TICKER_VIX)
     s_slope = extract_series(df_slope, TICKER_SLOPE)
+    s_rec = extract_series(df_recession, TICKER_RECESSION)
 
     # Reindex to match SPX
     df['VIX'] = s_vix.reindex(df.index, method='ffill')
     df['Slope'] = s_slope.reindex(df.index, method='ffill')
+    df['Recession'] = s_rec.reindex(df.index, method='ffill')
 
     # 3. Analytics
     df['Log_Return'] = get_log_returns(df['SPX'])
