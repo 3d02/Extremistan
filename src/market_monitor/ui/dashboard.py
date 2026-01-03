@@ -164,7 +164,7 @@ class MatplotlibDashboard:
         ax2.set_ylim(bottom=-90, top=5)
 
         # ---------------------------------------------------------
-        # TRACK 4: Yield Curve Slope (10Y-3M) - BofA Style
+        # TRACK 4: Yield Curve Slope (10Y-3M) - FRED Style
         # ---------------------------------------------------------
         ax3.set_title(f"4. YIELD CURVE: 10Y-3M Slope", fontsize=10, fontweight='bold', loc='left')
         style_axis(ax3)
@@ -172,15 +172,26 @@ class MatplotlibDashboard:
         # Zero Line
         ax3.axhline(0, color='black', linewidth=1.0, alpha=0.5)
 
-        # Main Line
-        ax3.plot(df.index, df['Slope'], color='navy', linewidth=1.2, label='10Y-3M')
+        # Recession Shading
+        if 'Recession' in df.columns:
+            # We shade regions where Recession == 1
+            # transform=ax3.get_xaxis_transform() allows us to shade full height (y=0 to 1 in axes coords)
+            ax3.fill_between(df.index, 0, 1, where=(df['Recession'] == 1),
+                            color='#e0e0e0', alpha=0.5, transform=ax3.get_xaxis_transform(),
+                            label='Recession', zorder=0)
 
-        # Fill Inversion (Negative) - Red
-        ax3.fill_between(df.index, df['Slope'], 0, where=(df['Slope'] < 0),
-                        color='red', alpha=0.3, interpolate=True, label='Inversion')
+        # Main Line (FRED Blue)
+        ax3.plot(df.index, df['Slope'], color='#4572A7', linewidth=1.5, label='10Y-3M')
 
-        ax3.set_ylabel("Basis Points (%)")
-        ax3.legend(loc='upper left')
+        # No Fill for Inversion (Removed per request)
+
+        ax3.set_ylabel("Percent")
+        # Adjust legend to include Recession if present
+        # We manually construct legend handles to ensure cleanliness
+        handles, labels = ax3.get_legend_handles_labels()
+        # Filter duplicates if any
+        by_label = dict(zip(labels, handles))
+        ax3.legend(by_label.values(), by_label.keys(), loc='upper left')
 
         plt.tight_layout()
         plt.show()
