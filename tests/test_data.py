@@ -1,8 +1,8 @@
 import pandas as pd
 import pytest
 from unittest.mock import MagicMock, patch
-from src.extremistan.data.adapters import YahooFinanceAdapter, CSVAdapter
-from src.extremistan.data.store import ParquetStore
+from market_monitor.data.adapters import YahooFinanceAdapter, CSVAdapter
+from market_monitor.data.store import ParquetStore
 import os
 import shutil
 
@@ -20,21 +20,20 @@ def test_store_save_load(clean_cache):
     store = ParquetStore(cache_dir=clean_cache)
     df = pd.DataFrame({'A': [1, 2, 3]}, index=pd.to_datetime(['2020-01-01', '2020-01-02', '2020-01-03']))
 
-    tickers = ['TEST']
-    start = '2020-01-01'
+    ticker = 'TEST'
 
     # Save
-    store.save(df, tickers, start)
+    store.save(df, ticker)
 
     # Load
-    loaded_df = store.load(tickers, start)
+    loaded_df = store.load(ticker)
 
     assert loaded_df is not None
     pd.testing.assert_frame_equal(df, loaded_df)
 
 def test_store_miss(clean_cache):
     store = ParquetStore(cache_dir=clean_cache)
-    loaded_df = store.load(['MISSING'], '2020-01-01')
+    loaded_df = store.load('MISSING')
     assert loaded_df is None
 
 # --- Test Adapters ---
@@ -55,22 +54,7 @@ def test_csv_adapter(tmp_path):
 @patch('yfinance.download')
 def test_yahoo_adapter_no_cache(mock_download):
     # Mock return data
-    mock_df = pd.DataFrame(
-        {'Close': [100, 101]},
-        index=pd.to_datetime(['2023-01-01', '2023-01-02'])
-    )
-    # yfinance often returns MultiIndex columns if multiple tickers,
-    # but here we mock simple behavior for single ticker if that's how we test it.
-    # Let's mock the structure our adapter expects.
-    # The adapter checks `data['Close']`.
-    # If we pass a dataframe with 'Close' column it works for single level.
-    # But usually yfinance returns a structure where 'Close' is a top level key if grouped by column.
-
-    # Let's construct a mock that mimics `yf.download(..., group_by='column')` default output
-    # which is MultiIndex (Price, Ticker) or just (Price) if single ticker?
-    # Actually recent yfinance is tricky.
-    # Let's assume we request multiple tickers so we get MultiIndex columns.
-
+    # Standard Yahoo Finance structure (MultiIndex columns)
     arrays = [['Close', 'Close'], ['SPX', 'VIX']]
     tuples = list(zip(*arrays))
     index = pd.MultiIndex.from_tuples(tuples, names=['Price', 'Ticker'])
