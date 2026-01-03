@@ -12,6 +12,11 @@ All notable changes to this project will be documented in this file.
 - **ADR 0007:** Documented dashboard restructuring.
 
 ### Changed
+- **Dashboard Visualization:**
+    - **Panel 1 (VIX):** Changed from line plot to background gradient fill (low alpha) to reduce visual clutter.
+    - **Panel 2 (Returns):** Switched from Sigma-based to MAD-based thresholds (+/- 5, 7, 10 MAD).
+    - **Panel 2 (Outliers):** Implemented semantic coloring (Red for Negative, Blue for Positive) and density-based "cloud" for normal points.
+    - **General:** Removed chart junk (top/right spines), moved grid to background, and unified "Bad Event" coloring (Red) across all panels.
 - **Project Rename:** Renamed project from `extremistan` to `market_monitor`.
 - **Architecture:** Shifted from "Extremistan" strategy logic to a pure Market Monitor data visualization tool.
 - **Data Caching:** Implemented delta-based per-ticker caching (`TICKER.parquet`) to optimize data fetching.
