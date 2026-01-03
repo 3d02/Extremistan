@@ -3,8 +3,8 @@ import yfinance as yf
 import pandas_datareader.data as web
 import numpy as np
 from typing import List, Optional
-from extremistan.data.interfaces import DataSource
-from extremistan.data.store import ParquetStore
+from market_monitor.data.interfaces import DataSource
+from market_monitor.data.store import ParquetStore
 
 class FredAdapter(DataSource):
     """
